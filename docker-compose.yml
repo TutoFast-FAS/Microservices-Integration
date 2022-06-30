@@ -1,0 +1,62 @@
+version: '3'
+services:
+
+  nosql-db:
+    image: mongo
+    ports:
+      - "27017:27017"
+    container_name: nosql-db
+    volumes:
+      - ./db/:/data/db
+
+  tutors:
+    build:
+      dockerfile: Dockerfile
+      context: ./tutors
+    container_name: tutors
+    ports:
+      - "8002:8002"
+    restart: always
+    depends_on:
+      - "nosql-db"
+    volumes:
+      - .:/app
+      - /app/tutors/node_modules
+
+  appointment:
+    build:
+      dockerfile: Dockerfile
+      context: ./appointment
+    container_name: appointment
+    ports:
+      - "8003:8003"
+    restart: always
+    depends_on:
+      - "nosql-db"
+    volumes:
+      - .:/app
+      - /app/appointment/node_modules
+
+  student:
+    build:
+      dockerfile: Dockerfile
+      context: ./student
+    container_name: student
+    ports:
+      - "8001:8001"
+    restart: always
+    depends_on:
+      - "nosql-db"
+    volumes:
+      - .:/app
+      - /app/student/node_modules
+  nginx-proxy:
+    build:
+      dockerfile: Dockerfile
+      context: ./proxy
+    depends_on:
+      - tutors
+      - appointment
+      - student
+    ports:
+      - "80:80"
